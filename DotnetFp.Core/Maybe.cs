@@ -1,5 +1,5 @@
 ﻿namespace DotnetFp.Core;
 
-public class Class1
+public struct Maybe
 {
 }
