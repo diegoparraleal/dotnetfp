@@ -1,4 +1,4 @@
-namespace DotnetFp.Core;
+namespace DotnetFp.Core.Extensions;
 
 public static class TypeExtensions
 {

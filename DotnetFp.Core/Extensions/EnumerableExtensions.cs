@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace DotnetFp.Core;
+namespace DotnetFp.Core.Extensions;
 
 public static class EnumerableExtensions
 {

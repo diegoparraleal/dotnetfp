@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using DotnetFp.Core.Extensions;
 using DotnetFp.Core.Interfaces;
 using DotnetFp.Core.Utils;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace DotnetFp.Core;
+namespace DotnetFp.Core.Monads;
 
 public readonly record struct Maybe<T>: IMonad<T>
 {

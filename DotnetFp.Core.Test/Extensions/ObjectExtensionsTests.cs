@@ -1,4 +1,6 @@
-namespace DotnetFp.Core.Test;
+using DotnetFp.Core.Extensions;
+
+namespace DotnetFp.Core.Test.Extensions;
 
 public class ObjectExtensionsTests
 {

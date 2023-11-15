@@ -1,4 +1,6 @@
-namespace DotnetFp.Core.Test;
+using DotnetFp.Core.Monads;
+
+namespace DotnetFp.Core.Test.Monads;
 using static TestHelper;
 public class MaybeTests
 {
