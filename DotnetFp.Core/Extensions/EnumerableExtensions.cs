@@ -52,4 +52,24 @@ public static class EnumerableExtensions
             .Select(x => x.Item);
 
     #endregion
+    
+    public static (IEnumerable<T> True, IEnumerable<T> False) Partition<T>(this IEnumerable<T> collection, Func<T, bool> predicateFn)
+        => collection.Project(predicateFn)
+            .GroupBy(x => x.Projection)
+            .ToDictionary(
+                x => x.Key,
+                x => x.Select(y => y.Item).AsEnumerable())
+            .Map(x => 
+                (x.MaybeGetOrElse(true, Array.Empty<T>()), 
+                 x.MaybeGetOrElse(false, Array.Empty<T>()))
+            );
+    public static string Join(this IEnumerable<string> strings, char separator) => string.Join(separator, strings.ToArray());
+    public static string Join(this IEnumerable<string> strings, string separator) => string.Join(separator, strings.ToArray());
+    
+    public static IReadOnlyCollection<T> AsReadOnly<T>(this IEnumerable<T> collection)
+        => collection switch
+        {
+            IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection,
+            _ => collection.ToList()
+        };
 }
