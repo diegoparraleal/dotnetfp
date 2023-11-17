@@ -5,6 +5,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <RootNamespace>DotnetFp.Core</RootNamespace>
+        <PackageId>DotnetFp</PackageId>
+        <Version>0.5</Version>
+        <Authors>Diego Parra</Authors>
     </PropertyGroup>
-
 </Project>
