@@ -63,6 +63,7 @@ public static class EnumerableExtensions
                 (x.MaybeGetOrElse(true, Array.Empty<T>()), 
                  x.MaybeGetOrElse(false, Array.Empty<T>()))
             );
+    
     public static string Join(this IEnumerable<string> strings, char separator) => string.Join(separator, strings.ToArray());
     public static string Join(this IEnumerable<string> strings, string separator) => string.Join(separator, strings.ToArray());
     
@@ -72,4 +73,7 @@ public static class EnumerableExtensions
             IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection,
             _ => collection.ToList()
         };
+
+    public static IReadOnlyCollection<T> ToEmptyIfNull<T>(this IReadOnlyCollection<T> collection)
+        => collection ?? Array.Empty<T>();
 }

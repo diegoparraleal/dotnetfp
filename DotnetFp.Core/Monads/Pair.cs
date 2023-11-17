@@ -49,8 +49,11 @@ public readonly record struct Pair<T>: IMonad<T>
     #region Lifting functions
 
     public static Pair<T> Of(T first, T second) => new(first, second);
-
+    
+    public static implicit operator Pair<T>((T, T) value) => Of(value.Item1, value.Item2);
     #endregion
+    
+    public override string ToString() => $"({_first}, {_second})";
 }
 
 public static class Pair

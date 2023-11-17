@@ -46,8 +46,8 @@ public readonly record struct Expected<T>: IMonad<T>
     public T OrFallback(Func<T> defaultValue) => _isSuccessful ? _value : defaultValue();
     public T OrRethrow() => _isSuccessful ? _value : throw _error.Exception;
     public Error ErrorOrThrow() => !_isSuccessful ? _error : throw new InvalidOperationException("Error was not set, this expected has a valid value");
-    public TR Match<TR>(Func<T, TR> success, Func<Error, TR> error)
-        => _isSuccessful ? success(_value) : error(_error);
+    public TR Match<TR>(Func<T, TR> success, Func<Error, TR> failure)
+        => _isSuccessful ? success(_value) : failure(_error);
     
     public bool IsSuccessful => _isSuccessful;
     
@@ -75,8 +75,11 @@ public readonly record struct Expected<T>: IMonad<T>
 
     public static Expected<T> Success(T value) => new(value);
     public static Expected<T> Failure(Error error) => new(error);
-
+    public static implicit operator Expected<T>(T value) => Success(value);
+    public static implicit operator Expected<T>(Error error) => Failure(error);
     #endregion
+    
+    public override string ToString() => $"({(_isSuccessful ? _value.ToString() : $"Error: {_error.Message}")})";
 }
 
 public static class Expected
@@ -104,9 +107,12 @@ public static class Try
 
 public static class ExpectedExtensions
 {
+    public static Expected<T> AsExpected<T>(this T value) => value;
+    public static Expected<T> AsExpectedError<T>(this Error error) => error;
+    
     #region Maybe related extensions
     public static Maybe<T> AsMaybe<T>(this Expected<T> expected) 
-        => expected.Match(success: Maybe.Of, error: _ => Maybe.Nothing<T>());
+        => expected.Match(success: Maybe.Of, failure: _ => Maybe.Nothing<T>());
     #endregion
     
     #region IEnumerable related extensions

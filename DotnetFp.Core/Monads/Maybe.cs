@@ -47,6 +47,9 @@ public readonly record struct Maybe<T>: IMonad<T>
         return _hasValue;
     }
     
+    public TR Match<TR>(Func<T, TR> some, Func<TR> none)
+        => _hasValue ? some(_value) : none();
+    
     public void Deconstruct(out bool hasValue, out T value)
     {
         hasValue = _hasValue;
@@ -57,8 +60,7 @@ public readonly record struct Maybe<T>: IMonad<T>
     #region Lifting functions
     public static Maybe<T> Nothing => default;
     public static Maybe<TR> Of<TR>(TR value) => new(value);
-
-    public static implicit operator Maybe<T>(T value) => Of(value);
+    public static implicit operator Maybe<T>(T value) => value is not null ? Of(value): Maybe.Nothing<T>();
     #endregion
     
     public override string ToString() => $"({(_hasValue ? _value.ToString() : None)})";
@@ -74,7 +76,7 @@ public static class Maybe
 
 public static class MaybeExtensions
 {
-    public static Maybe<T> AsMaybe<T>(this T value) => Maybe.Of(value);
+    public static Maybe<T> AsMaybe<T>(this T value) => value;
     public static T OrNull<T>(this Maybe<T> maybe) where T: class => maybe.OrElse((T)null);
     
     #region IEnumerable related extensions

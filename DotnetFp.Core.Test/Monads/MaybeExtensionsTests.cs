@@ -15,4 +15,16 @@ public class MaybeExtensionsTests
         // Assert
         Assert.That(sut.AsEnumerable(), Is.EquivalentTo(Something.Once()));
     }
+    
+    [Test]
+    public void Maybe_extensions_for_collections_work()
+    {
+        // Act
+        var sut = new [] { Maybe.Of(Something), Maybe.Nothing<string>() };
+        
+        // Assert
+        Assert.That(sut.SelectValues(), Is.EquivalentTo(Something.Once()));
+        Assert.That(sut.WhereNothing().Count(), Is.EqualTo(1));
+        Assert.That(sut.WhereHasValue().Count(), Is.EqualTo(1));
+    }
 }

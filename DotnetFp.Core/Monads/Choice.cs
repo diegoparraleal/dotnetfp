@@ -1,6 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Reflection.Emit;
 using DotnetFp.Core.Extensions;
 using DotnetFp.Core.Interfaces;
 
@@ -90,24 +88,19 @@ public readonly record struct Choice<TL, TR>: IMonad<TL, TR>
     
     public TR RightOrThrow(string exceptionMessage = null)
         => _isRight ? _right : throw new InvalidOperationException(exceptionMessage ?? $"Left value of {typeof(TL).PrettyName()} was expected.");
-
-    public T ValueOrThrow<T>(string exceptionMessage = null) 
-        => typeof(T) switch
-        {
-            TL => (T)(object) _left,
-            TR => (T)(object) _right,
-            _ => throw new InvalidOperationException($"Generic type should be of {typeof(TL).PrettyName()} or {typeof(TR).PrettyName()}")
-        };
+    
+    public T ValueOrThrow<T>()
+        => typeof(T) == typeof(TL) ? (T) Convert.ChangeType(_left, typeof(T)) 
+            : typeof(T) == typeof(TR) ? (T) Convert.ChangeType(_right, typeof(T))
+                : throw new InvalidOperationException($"Generic type should be of {typeof(TL).PrettyName()} or {typeof(TR).PrettyName()}");
 
     public bool IsLeft => _isLeft;
     public bool IsRight => _isRight;
+
     public bool Is<T>()
-        => typeof(T) switch
-        {
-            TL => _isLeft,
-            TR => _isRight,
-            _ => throw new InvalidOperationException($"Generic type should be of {typeof(TL).PrettyName()} or {typeof(TR).PrettyName()}")
-        }; 
+        => typeof(T) == typeof(TL) ? _isLeft
+            : typeof(T) == typeof(TR) ? _isRight
+               : throw new InvalidOperationException($"Generic type should be of {typeof(TL).PrettyName()} or {typeof(TR).PrettyName()}");
     
     public bool TryGet(out TL value)
     {
@@ -133,7 +126,12 @@ public readonly record struct Choice<TL, TR>: IMonad<TL, TR>
     #region Lifting functions
     public static Choice<TL, TR> Of(TL value) => new(value);
     public static Choice<TL, TR> Of(TR value) => new(value);
+    
+    public static implicit operator Choice<TL, TR>(TL value) => Of(value);
+    public static implicit operator Choice<TL, TR>(TR value) => Of(value);
     #endregion
+    
+    public override string ToString() => $"({(_isLeft ? _left : _right)})";
     
     private Choice<TLResult, TR> ChangeLeftType<TLResult>() => Choice<TLResult, TR>.Of(_right);  
     private Choice<TL, TRResult> ChangeRightType<TRResult>() => Choice<TL, TRResult>.Of(_left);  
@@ -141,28 +139,42 @@ public readonly record struct Choice<TL, TR>: IMonad<TL, TR>
 
 public static class Choice
 {
-    public static bool Is<TL, TR, T>(Choice<TL, TR> choice) => choice.Is<T>();
+    public static Choice<TL, TR> Of<TL, TR>(TL value) => Choice<TL, TR>.Of(value);
+    public static Choice<TL, TR> Of<TL, TR>(TR value) => Choice<TL, TR>.Of(value);
     public static bool IsLeft<TL, TR>(Choice<TL, TR> choice) => choice.IsLeft;
     public static bool IsRight<TL, TR>(Choice<TL, TR> choice) => choice.IsRight;
 }
 
 public static class ChoiceExtensions
 {
+    public static Choice<TL, TR> AsChoice<TL, TR>(this TL value) => value;
+    public static Choice<TL, TR> AsChoice<TL, TR>(this TR value) => value;
+    
     #region IEnumerable related extensions
-    public static IEnumerable<TBase> AsEnumerable<TL, TR, TBase>(this Choice<TL, TR> choice) 
-        where TL: TBase where TR: TBase
+    public static IEnumerable<TL> LeftAsEnumerable<TL, TR>(this Choice<TL, TR> choice) 
     {
-        yield return choice.Match(left: x => (TBase) x, right: x => x);
+        if (choice.IsLeft) yield return choice.LeftOrThrow();
     }
-
+    
+    public static IEnumerable<TR> RightAsEnumerable<TL, TR>(this Choice<TL, TR> choice) 
+    {
+        if (choice.IsRight) yield return choice.RightOrThrow();
+    }
+    
+    public static IEnumerable<Choice<TL, TR>> WhereLeft<TL, TR>(this IEnumerable<Choice<TL, TR>> collection)
+        => collection.Where(Choice.IsLeft);
+    
+    public static IEnumerable<Choice<TL, TR>> WhereRight<TL, TR>(this IEnumerable<Choice<TL, TR>> collection)
+        => collection.Where(Choice.IsRight);
+    
     public static IEnumerable<TL> SelectLeftValues<TL, TR>(this IEnumerable<Choice<TL, TR>> collection) 
         => collection
-            .Where(Choice.IsLeft)
+            .WhereLeft()
             .Select(x => x.LeftOrThrow());
     
     public static IEnumerable<TR> SelectRightValues<TL, TR>(this IEnumerable<Choice<TL, TR>> collection) 
         => collection
-            .Where(Choice.IsRight)
+            .WhereRight()
             .Select(x => x.RightOrThrow());
     
     public static (IEnumerable<TL>, IEnumerable<TR>) Partition<TL, TR>(this IEnumerable<Choice<TL, TR>> collection)
